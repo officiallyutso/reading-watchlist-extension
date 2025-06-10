@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 src/lib/firebase.ts
+src/lib/firestore.ts
+
+.vercel

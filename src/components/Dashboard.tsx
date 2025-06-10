@@ -1,12 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { BookOpen, Video, FileText, Tv, Plus, Search, Filter, User, LogOut, Star, Clock, CheckCircle } from 'lucide-react';
+import { firestoreService } from '../lib/firestore';
+import { BookOpen, Video, FileText, Tv, Plus, Search, Filter, User, LogOut, Star, Clock, CheckCircle, Edit3, Trash2 } from 'lucide-react';
+import type { ContentItem } from '../types';
+import AddContentModal from '../components/AddContentModal';
+import EditContentModal from '../components/EditContentModal';
 
 const Dashboard: React.FC = () => {
   const { currentUser, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [loggingOut, setLoggingOut] = useState(false);
+  const [items, setItems] = useState<ContentItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingItem, setEditingItem] = useState<ContentItem | null>(null);
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    setLoading(true);
+    const unsubscribe = firestoreService.subscribeToUserContent(
+      currentUser.uid,
+      (content) => {
+        setItems(content);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [currentUser]);
 
   const handleLogout = async () => {
     try {
@@ -18,69 +41,24 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Mock data - replace with Firebase data later
-  const mockItems = [
-    {
-      id: 1,
-      title: "The Psychology of Programming",
-      type: "book",
-      status: "in-progress",
-      progress: 45,
-      tags: ["programming", "psychology"],
-      addedDate: "2024-01-15",
-      author: "Gerald Weinberg"
-    },
-    {
-      id: 2,
-      title: "Building Scalable Web Applications",
-      type: "video",
-      status: "todo",
-      progress: 0,
-      tags: ["web-dev", "architecture"],
-      addedDate: "2024-01-14",
-      duration: "2h 30m"
-    },
-    {
-      id: 3,
-      title: "Understanding React Hooks",
-      type: "article",
-      status: "completed",
-      progress: 100,
-      tags: ["react", "hooks"],
-      addedDate: "2024-01-13",
-      readTime: "15 min"
-    },
-    {
-      id: 4,
-      title: "Stranger Things Season 4",
-      type: "show",
-      status: "in-progress",
-      progress: 60,
-      tags: ["sci-fi", "netflix"],
-      addedDate: "2024-01-12",
-      episodes: "8/10"
-    },
-    {
-      id: 5,
-      title: "Clean Code Principles",
-      type: "book",
-      status: "todo",
-      progress: 0,
-      tags: ["programming", "best-practices"],
-      addedDate: "2024-01-11",
-      author: "Robert Martin"
-    },
-    {
-      id: 6,
-      title: "Advanced TypeScript Patterns",
-      type: "video",
-      status: "in-progress",
-      progress: 25,
-      tags: ["typescript", "patterns"],
-      addedDate: "2024-01-10",
-      duration: "1h 45m"
+  const handleDeleteItem = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this item?')) return;
+    
+    try {
+      await firestoreService.deleteContent(id);
+    } catch (error) {
+      console.error('Error deleting item:', error);
     }
-  ];
+  };
+
+  const handleProgressUpdate = async (id: string, newProgress: number) => {
+    try {
+      const status = newProgress === 100 ? 'completed' : newProgress > 0 ? 'in-progress' : 'todo';
+      await firestoreService.updateContent(id, { progress: newProgress, status });
+    } catch (error) {
+      console.error('Error updating progress:', error);
+    }
+  };
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -120,7 +98,7 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const filteredItems = mockItems.filter(item => {
+  const filteredItems = items.filter(item => {
     const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          item.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesTab = activeTab === 'all' || item.type === activeTab || item.status === activeTab;
@@ -128,11 +106,22 @@ const Dashboard: React.FC = () => {
   });
 
   const stats = {
-    total: mockItems.length,
-    inProgress: mockItems.filter(item => item.status === 'in-progress').length,
-    completed: mockItems.filter(item => item.status === 'completed').length,
-    todo: mockItems.filter(item => item.status === 'todo').length
+    total: items.length,
+    inProgress: items.filter(item => item.status === 'in-progress').length,
+    completed: items.filter(item => item.status === 'completed').length,
+    todo: items.filter(item => item.status === 'todo').length
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading your content...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -208,7 +197,10 @@ const Dashboard: React.FC = () => {
             />
           </div>
           
-          <button className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all flex items-center justify-center font-semibold transform hover:scale-105 active:scale-95">
+          <button 
+            onClick={() => setShowAddModal(true)}
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all flex items-center justify-center font-semibold transform hover:scale-105 active:scale-95"
+          >
             <Plus className="w-5 h-5 mr-2" />
             Add Content
           </button>
@@ -244,8 +236,24 @@ const Dashboard: React.FC = () => {
         {/* Items Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredItems.map((item) => (
-            <div key={item.id} className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg hover:border-slate-300 transition-all group">
-              <div className="flex items-start justify-between mb-4">
+            <div key={item.id} className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg hover:border-slate-300 transition-all group relative">
+              {/* Action buttons */}
+              <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                <button
+                  onClick={() => setEditingItem(item)}
+                  className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                >
+                  <Edit3 className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => handleDeleteItem(item.id!)}
+                  className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="flex items-start justify-between mb-4 pr-20">
                 <div className={`flex items-center px-3 py-1 rounded-lg border text-sm font-medium ${getTypeColor(item.type)}`}>
                   {getIcon(item.type)}
                   <span className="ml-2 capitalize">{item.type}</span>
@@ -276,20 +284,27 @@ const Dashboard: React.FC = () => {
                 <p className="text-slate-600 text-sm mb-3">Episodes: {item.episodes}</p>
               )}
               
-              {item.progress > 0 && (
-                <div className="mb-4">
-                  <div className="flex justify-between text-sm text-slate-600 mb-2">
-                    <span className="font-medium">Progress</span>
-                    <span className="font-bold">{item.progress}%</span>
-                  </div>
-                  <div className="w-full bg-slate-200 rounded-full h-2">
-                    <div
-                      className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2 rounded-full transition-all"
-                      style={{ width: `${item.progress}%` }}
-                    ></div>
-                  </div>
+              {/* Progress bar with click to update */}
+              <div className="mb-4">
+                <div className="flex justify-between text-sm text-slate-600 mb-2">
+                  <span className="font-medium">Progress</span>
+                  <span className="font-bold">{item.progress}%</span>
                 </div>
-              )}
+                <div 
+                  className="w-full bg-slate-200 rounded-full h-2 cursor-pointer"
+                  onClick={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const newProgress = Math.round((x / rect.width) * 100);
+                    handleProgressUpdate(item.id!, Math.max(0, Math.min(100, newProgress)));
+                  }}
+                >
+                  <div
+                    className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2 rounded-full transition-all"
+                    style={{ width: `${item.progress}%` }}
+                  ></div>
+                </div>
+              </div>
               
               <div className="flex flex-wrap gap-2 mb-4">
                 {item.tags.map((tag) => (
@@ -322,13 +337,39 @@ const Dashboard: React.FC = () => {
                 : 'Start building your content library by adding your first item'
               }
             </p>
-            <button className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all font-semibold">
+            <button 
+              onClick={() => setShowAddModal(true)}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all font-semibold"
+            >
               <Plus className="w-5 h-5 mr-2 inline" />
               Add Your First Item
             </button>
           </div>
         )}
       </div>
+
+      {/* Modals */}
+      {showAddModal && (() => {
+        const userId = currentUser?.uid;
+        if (!userId) return null;
+
+        return (
+          <AddContentModal
+            isOpen={showAddModal}
+            onClose={() => setShowAddModal(false)}
+            userId={userId}
+          />
+        );
+      })()}
+
+
+      {editingItem && (
+        <EditContentModal
+          isOpen={!!editingItem}
+          onClose={() => setEditingItem(null)}
+          item={editingItem}
+        />
+      )}
     </div>
   );
 };
