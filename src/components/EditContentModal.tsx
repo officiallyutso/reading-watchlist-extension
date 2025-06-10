@@ -140,7 +140,102 @@ const EditContentModal: React.FC<EditContentModalProps> = ({ isOpen, onClose, it
             />
           </div>
 
-          
+          {/* Conditional fields based on type */}
+          {(formData.type === 'book') && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Author
+              </label>
+              <input
+                type="text"
+                value={formData.author}
+                onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                className="w-full p-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          )}
+
+          {(formData.type === 'video') && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Duration
+              </label>
+              <input
+                type="text"
+                value={formData.duration}
+                onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                className="w-full p-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          )}
+
+          {(formData.type === 'article') && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Read Time
+              </label>
+              <input
+                type="text"
+                value={formData.readTime}
+                onChange={(e) => setFormData({ ...formData, readTime: e.target.value })}
+                className="w-full p-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          )}
+
+          {(formData.type === 'show') && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Episodes
+              </label>
+              <input
+                type="text"
+                value={formData.episodes}
+                onChange={(e) => setFormData({ ...formData, episodes: e.target.value })}
+                className="w-full p-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              URL (optional)
+            </label>
+            <input
+              type="url"
+              value={formData.url}
+              onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+              className="w-full p-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Notes (optional)
+            </label>
+            <textarea
+              value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              className="w-full p-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 h-24 resize-none"
+            />
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading || !formData.title}
+              className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Updating...' : 'Update Content'}
+            </button>
+          </div>
         </form>
       </div>
     </div>
