@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="header">
+        <div class="logo">T</div>
+        <div class="title">Add to Traylist</div>
+    </div>
+    
+    <div id="loginPrompt" class="login-prompt" style="display: none;">
+        <h3>Sign in Required</h3>
+        <p>Please sign in to your Traylist account to save content.</p>
+        <a href="#" class="login-link" id="loginLink">Open Traylist</a>
+    </div>
+    
+    <div id="mainForm">
+        <div id="status" class="status"></div>
+        
+        <div class="form-group">
+            <label for="title">Title</label>
+            <input type="text" id="title" placeholder="Content title">
+        </div>
+        
+        <div class="form-group">
+            <label for="type">Type</label>
+            <select id="type">
+                <option value="article">Article</option>
+                <option value="video">Video</option>
+                <option value="book">Book</option>
+                <option value="show">Show</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="tags">Tags (comma-separated)</label>
+            <input type="text" id="tags" placeholder="react, tutorial, programming">
+        </div>
+        
+        <div class="form-group">
+            <label for="notes">Notes (optional)</label>
+            <textarea id="notes" placeholder="Add any notes about this content..."></textarea>
+        </div>
+        
+        <div class="button-group">
+            <button class="btn-secondary" id="cancelBtn">Cancel</button>
+            <button class="btn-primary" id="saveBtn">Save to Traylist</button>
+        </div>
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html>
