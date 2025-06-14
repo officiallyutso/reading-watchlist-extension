@@ -110,5 +110,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     cancelBtn.addEventListener('click', () => {
         window.close();
+        
     });
 });
