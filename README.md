@@ -17,6 +17,7 @@ Traylist is a React + Firebase-powered web application designed to help users or
 - Real-time Firestore integration
 - Conditional metadata fields based on content type
 
+
 ---
 
 ## Project Structure
