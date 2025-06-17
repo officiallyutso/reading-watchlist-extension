@@ -147,18 +147,6 @@ npm run dev
 
 ---
 
-## Deployment
-
-This application can be deployed using platforms like:
-
-* Firebase Hosting
-* Vercel
-* Netlify
-
-Ensure environment variables (if any) and Firebase configurations are correctly set.
-
----
-
 ## License
 
 This project is licensed under the MIT License.
